@@ -23,22 +23,19 @@ import org.aopalliance.aop.Advice;
 import org.springframework.amqp.core.AcknowledgeMode;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
-import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.integration.amqp.inbound.AmqpInboundGateway;
-import org.springframework.integration.amqp.support.AmqpHeaderMapper;
-import org.springframework.integration.amqp.support.DefaultAmqpHeaderMapper;
-import org.springframework.integration.dsl.core.MessagingGatewaySpec;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.util.ErrorHandler;
 
 /**
+ * An {@link AmqpBaseInboundGatewaySpec} implementation for a {@link AmqpInboundGateway}.
+ * Allows to provide {@link SimpleMessageListenerContainer} options.
+ *
  * @author Artem Bilan
  */
-public class AmqpInboundGatewaySpec extends MessagingGatewaySpec<AmqpInboundGatewaySpec, AmqpInboundGateway> {
+public class AmqpInboundGatewaySpec extends AmqpBaseInboundGatewaySpec<AmqpInboundGatewaySpec> {
 
 	private final SimpleMessageListenerContainer listenerContainer;
-
-	private final DefaultAmqpHeaderMapper headerMapper = new DefaultAmqpHeaderMapper();
 
 	AmqpInboundGatewaySpec(SimpleMessageListenerContainer listenerContainer) {
 		super(new AmqpInboundGateway(listenerContainer));
@@ -254,51 +251,6 @@ public class AmqpInboundGatewaySpec extends MessagingGatewaySpec<AmqpInboundGate
 	 */
 	public AmqpInboundGatewaySpec defaultRequeueRejected(boolean defaultRequeueRejected) {
 		this.listenerContainer.setDefaultRequeueRejected(defaultRequeueRejected);
-		return this;
-	}
-
-	/**
-	 * Configure the gateway's {@link MessageConverter}; defaults to {@link
-	 * org.springframework.amqp.support.converter.SimpleMessageConverter}.
-	 * @param messageConverter the messageConverter.
-	 * @return the spec.
-	 * @see AmqpInboundGateway#setMessageConverter(MessageConverter)
-	 */
-	public AmqpInboundGatewaySpec messageConverter(MessageConverter messageConverter) {
-		this.target.setMessageConverter(messageConverter);
-		return this;
-	}
-
-	/**
-	 * Configure the gateway's {@link AmqpHeaderMapper}; defaults to
-	 * {@link DefaultAmqpHeaderMapper}.
-	 * @param headerMapper the headerMapper.
-	 * @return the spec.
-	 */
-	public AmqpInboundGatewaySpec headerMapper(AmqpHeaderMapper headerMapper) {
-		this.target.setHeaderMapper(headerMapper);
-		return this;
-	}
-
-	/**
-	 * Only applies if the default header mapper is used.
-	 * @param headers the headers.
-	 * @return the spec.
-	 * @see DefaultAmqpHeaderMapper#setRequestHeaderNames(String[])
-	 */
-	public AmqpInboundGatewaySpec mappedRequestHeaders(String... headers) {
-		this.headerMapper.setRequestHeaderNames(headers);
-		return this;
-	}
-
-	/**
-	 * Only applies if the default header mapper is used.
-	 * @param headers the headers.
-	 * @return the spec.
-	 * @see DefaultAmqpHeaderMapper#setReplyHeaderNames(String[])
-	 */
-	public AmqpInboundGatewaySpec mappedReplyHeaders(String... headers) {
-		this.headerMapper.setReplyHeaderNames(headers);
 		return this;
 	}
 

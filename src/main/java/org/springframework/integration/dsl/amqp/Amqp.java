@@ -20,10 +20,6 @@ import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
-import org.springframework.integration.amqp.inbound.AmqpInboundChannelAdapter;
-import org.springframework.integration.amqp.inbound.AmqpInboundGateway;
-import org.springframework.integration.dsl.core.MessageProducerSpec;
-import org.springframework.integration.dsl.core.MessagingGatewaySpec;
 
 /**
  * Factory class for AMQP components.
@@ -33,7 +29,7 @@ import org.springframework.integration.dsl.core.MessagingGatewaySpec;
 public abstract class Amqp {
 
 	/**
-	 * Create an initial AmqpInboundGatewaySpec.
+	 * Create an initial {@link AmqpInboundGatewaySpec}.
 	 * @param connectionFactory the connectionFactory.
 	 * @param queueNames the queueNames.
 	 * @return the AmqpInboundGatewaySpec.
@@ -45,7 +41,7 @@ public abstract class Amqp {
 	}
 
 	/**
-	 * Create an initial AmqpInboundGatewaySpec.
+	 * Create an initial {@link AmqpInboundGatewaySpec}.
 	 * @param connectionFactory the connectionFactory.
 	 * @param queues the queues.
 	 * @return the AmqpInboundGatewaySpec.
@@ -57,12 +53,15 @@ public abstract class Amqp {
 	}
 
 	/**
-	 * Create an initial AmqpInboundGatewaySpec.
+	 * Create an initial {@link AmqpBaseInboundGatewaySpec}
+	 * with provided {@link SimpleMessageListenerContainer}.
+	 * Note: only endpoint options are available from spec.
+	 * The {@code listenerContainer} options should be specified
+	 * on the provided {@link SimpleMessageListenerContainer}.
 	 * @param listenerContainer the listenerContainer
-	 * @return the AmqpInboundGatewaySpec.
+	 * @return the AmqpBaseInboundGatewaySpec.
 	 */
-	public static MessagingGatewaySpec<AmqpInboundGatewaySpec, AmqpInboundGateway> inboundGateway(
-			SimpleMessageListenerContainer listenerContainer) {
+	public static  AmqpBaseInboundGatewaySpec<?> inboundGateway(SimpleMessageListenerContainer listenerContainer) {
 		return new AmqpInboundGatewaySpec(listenerContainer);
 	}
 
@@ -96,7 +95,7 @@ public abstract class Amqp {
 	 * @param listenerContainer the listenerContainer
 	 * @return the AmqpInboundChannelAdapterSpec.
 	 */
-	public static MessageProducerSpec<AmqpInboundChannelAdapterSpec, AmqpInboundChannelAdapter> inboundAdapter(
+	public static AmqpBaseInboundChannelAdapterSpec<?> inboundAdapter(
 			SimpleMessageListenerContainer listenerContainer) {
 		return new AmqpInboundChannelAdapterSpec(listenerContainer);
 	}

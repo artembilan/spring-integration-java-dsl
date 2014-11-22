@@ -32,6 +32,7 @@ import org.springframework.util.Assert;
  * A {@link MessageChannelSpec} for a {@link AbstractAmqpChannel}s.
  *
  * @author Artem Bilan
+ * @author Gary Russel
  */
 public class AmqpPollableMessageChannelSpec<S extends AmqpPollableMessageChannelSpec<S>>
 		extends MessageChannelSpec<S, AbstractAmqpChannel> {
@@ -117,7 +118,8 @@ public class AmqpPollableMessageChannelSpec<S extends AmqpPollableMessageChannel
 	 */
 	public S templateChannelTransacted(boolean channelTransacted) {
 		try {
-			Method method = AmqpChannelFactoryBean.class.getDeclaredMethod("setTemplateChannelTransacted", boolean.class);
+			Method method =
+					AmqpChannelFactoryBean.class.getDeclaredMethod("setTemplateChannelTransacted", boolean.class);
 			method.invoke(this.amqpChannelFactoryBean, channelTransacted);
 		}
 		catch (NoSuchMethodException e) {
@@ -136,8 +138,8 @@ public class AmqpPollableMessageChannelSpec<S extends AmqpPollableMessageChannel
 	 * (for receives).
 	 * @param messagePropertiesConverter the messagePropertiesConverter.
 	 * @return the spec.
-	 * @see org.springframework.amqp.rabbit.core.RabbitTemplate#setMessagePropertiesConverter(MessagePropertiesConverter)
-	 * @see org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer#setMessagePropertiesConverter(MessagePropertiesConverter)
+	 * @see org.springframework.amqp.rabbit.core.RabbitTemplate#setMessagePropertiesConverter
+	 * @see org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer#setMessagePropertiesConverter
 	 */
 	public S messagePropertiesConverter(MessagePropertiesConverter messagePropertiesConverter) {
 		this.amqpChannelFactoryBean.setMessagePropertiesConverter(messagePropertiesConverter);

@@ -170,8 +170,8 @@ public class JmsInboundGatewaySpec<S extends JmsInboundGatewaySpec<S>>
 		return _this();
 	}
 
-	public static class JmsInboundGatewayListenerContainerSpec<C extends AbstractMessageListenerContainer> extends
-			JmsInboundGatewaySpec<JmsInboundGatewayListenerContainerSpec<C>> {
+	public static class JmsInboundGatewayListenerContainerSpec<C extends AbstractMessageListenerContainer>
+			extends JmsInboundGatewaySpec<JmsInboundGatewayListenerContainerSpec<C>> {
 
 		private final JmsListenerContainerSpec<C> spec;
 

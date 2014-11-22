@@ -117,6 +117,7 @@ public class JmsOutboundGatewaySpec extends MessageHandlerSpec<JmsOutboundGatewa
 	 * @param <P> the expected payload type.
 	 * @return the current {@link JmsOutboundGatewaySpec}.
 	 * @see JmsOutboundGateway#setRequestDestinationExpression(org.springframework.expression.Expression)
+	 * @see FunctionExpression
 	 */
 	public <P> JmsOutboundGatewaySpec requestDestination(Function<Message<P>, ?> destinationFunction) {
 		this.target.setRequestDestinationExpression(new FunctionExpression<Message<P>>(destinationFunction));
@@ -165,6 +166,7 @@ public class JmsOutboundGatewaySpec extends MessageHandlerSpec<JmsOutboundGatewa
 	 * @param <P> the expected payload type.
 	 * @return the current {@link JmsOutboundGatewaySpec}.
 	 * @see JmsOutboundGateway#setReplyDestinationExpression(org.springframework.expression.Expression)
+	 * @see FunctionExpression
 	 */
 	public <P> JmsOutboundGatewaySpec replyDestination(Function<Message<P>, ?> destinationFunction) {
 		this.target.setReplyDestinationExpression(new FunctionExpression<Message<P>>(destinationFunction));

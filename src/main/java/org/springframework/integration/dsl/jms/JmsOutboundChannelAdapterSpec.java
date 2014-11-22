@@ -48,7 +48,7 @@ public class JmsOutboundChannelAdapterSpec<S extends JmsOutboundChannelAdapterSp
 	}
 
 	/**
-	 * @param extractPayload the extractPayload.
+	 * @param extractPayload the extractPayload flag.
 	 * @return the current {@link JmsOutboundChannelAdapterSpec}.
 	 * @see JmsSendingMessageHandler#setExtractPayload(boolean)
 	 */
@@ -113,6 +113,7 @@ public class JmsOutboundChannelAdapterSpec<S extends JmsOutboundChannelAdapterSp
 	 * @param <P> the expected payload type.
 	 * @return the current {@link JmsOutboundChannelAdapterSpec}.
 	 * @see JmsSendingMessageHandler#setDestinationName(String)
+	 * @see FunctionExpression
 	 */
 	public <P> S destination(Function<Message<P>, ?> destinationFunction) {
 		this.target.setDestinationExpression(new FunctionExpression<Message<P>>(destinationFunction));
