@@ -18,6 +18,7 @@ package org.springframework.integration.dsl;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 
 import org.springframework.integration.channel.interceptor.WireTap;
 import org.springframework.integration.core.MessageSelector;
@@ -28,6 +29,8 @@ import org.springframework.messaging.MessageChannel;
 import org.springframework.util.Assert;
 
 /**
+ * The {@link IntegrationComponentSpec} implementation for the {@link WireTap} component.
+ *
  * @author Gary Russell
  * @author Artem Bilan
  * @since 1.1.0
@@ -42,7 +45,7 @@ public class WireTapSpec extends IntegrationComponentSpec<WireTapSpec, WireTap> 
 	private Long timeout;
 
 	WireTapSpec(MessageChannel channel) {
-		Assert.notNull(channel);
+		Assert.notNull(channel, "'channel' must not be null");
 		this.channel = channel;
 	}
 
@@ -76,7 +79,7 @@ public class WireTapSpec extends IntegrationComponentSpec<WireTapSpec, WireTap> 
 			return Arrays.asList(this.selector, this.target);
 		}
 		else {
-			return Arrays.<Object>asList(this.target);
+			return Collections.<Object>singletonList(this.target);
 		}
 	}
 
