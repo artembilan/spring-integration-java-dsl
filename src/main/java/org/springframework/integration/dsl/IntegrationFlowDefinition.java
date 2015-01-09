@@ -33,6 +33,7 @@ import org.springframework.integration.aggregator.ResequencingMessageHandler;
 import org.springframework.integration.channel.ChannelInterceptorAware;
 import org.springframework.integration.channel.DirectChannel;
 import org.springframework.integration.channel.FixedSubscriberChannel;
+import org.springframework.integration.channel.interceptor.WireTap;
 import org.springframework.integration.config.SourcePollingChannelAdapterFactoryBean;
 import org.springframework.integration.core.GenericSelector;
 import org.springframework.integration.core.MessageSelector;
@@ -198,7 +199,7 @@ public abstract class IntegrationFlowDefinition<B extends IntegrationFlowDefinit
 	public B channel(MessageChannel messageChannel) {
 		Assert.notNull(messageChannel);
 		if (this.currentMessageChannel != null) {
-			this.register(new GenericEndpointSpec<BridgeHandler>(new BridgeHandler()), null);
+			bridge(null);
 		}
 		this.currentMessageChannel = messageChannel;
 		return registerOutputChannelIfCan(this.currentMessageChannel);
@@ -232,24 +233,47 @@ public abstract class IntegrationFlowDefinition<B extends IntegrationFlowDefinit
 		return addComponents(spec.getComponentsToRegister()).channel(spec);
 	}
 
-	public B wireTap(String tapChannel) {
-		WireTapSpec spec = new WireTapSpec();
-		spec.channel(tapChannel);
-		return wireTap(spec);
+	public B wireTap(IntegrationFlow flow) {
+		return wireTap(flow, null);
 	}
 
-	public B wireTap(WireTapSpec wireTapSpec) {
-		DslWireTap tap = wireTapSpec.get();
-		MessageChannel channel = this.currentMessageChannel;
-		if (channel == null) {
-			channel = new DirectChannel();
-			registerOutputChannelIfCan(channel);
-			this.currentMessageChannel = channel;
+	public B wireTap(String wireTapChannel) {
+		return wireTap(wireTapChannel, null);
+	}
+
+	public B wireTap(MessageChannel wireTapChannel) {
+		return wireTap(wireTapChannel, null);
+	}
+
+	public B wireTap(IntegrationFlow flow, Consumer<WireTapSpec> wireTapConfigurer) {
+		DirectChannel wireTapChannel = new DirectChannel();
+		IntegrationFlowBuilder flowBuilder = IntegrationFlows.from(wireTapChannel);
+		flow.accept(flowBuilder);
+		addComponent(flowBuilder.get());
+		return wireTap(wireTapChannel, wireTapConfigurer);
+	}
+
+	public B wireTap(String wireTapChannel, Consumer<WireTapSpec> wireTapConfigurer) {
+		DirectChannel internalWireTapChannel = new DirectChannel();
+		addComponent(IntegrationFlows.from(internalWireTapChannel).channel(wireTapChannel).get());
+		return wireTap(internalWireTapChannel, wireTapConfigurer);
+	}
+
+	public B wireTap(MessageChannel wireTapChannel, Consumer<WireTapSpec> wireTapConfigurer) {
+		WireTapSpec wireTapSpec = new WireTapSpec(wireTapChannel);
+		if (wireTapConfigurer != null) {
+			wireTapConfigurer.accept(wireTapSpec);
+		}
+		return wireTap(wireTapSpec);
+	}
+
+	private B wireTap(WireTapSpec wireTapSpec) {
+		WireTap interceptor = wireTapSpec.get();
+		if (this.currentMessageChannel == null || !(this.currentMessageChannel instanceof ChannelInterceptorAware)) {
+			channel(new DirectChannel());
 		}
 		addComponents(wireTapSpec.getComponentsToRegister());
-		if (channel instanceof ChannelInterceptorAware) {
-			((ChannelInterceptorAware) this.currentMessageChannel).addInterceptor(tap);
-		}
+		((ChannelInterceptorAware) this.currentMessageChannel).addInterceptor(interceptor);
 		return _this();
 	}
 

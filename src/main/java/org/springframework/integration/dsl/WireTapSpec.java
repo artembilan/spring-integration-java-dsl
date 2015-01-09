@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,51 +13,46 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.integration.dsl;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 
+import org.springframework.integration.channel.interceptor.WireTap;
 import org.springframework.integration.core.MessageSelector;
 import org.springframework.integration.dsl.core.ComponentsRegistration;
 import org.springframework.integration.dsl.core.IntegrationComponentSpec;
-import org.springframework.integration.dsl.support.MessageChannelReference;
 import org.springframework.integration.filter.ExpressionEvaluatingSelector;
 import org.springframework.messaging.MessageChannel;
-import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.util.Assert;
 
 /**
  * @author Gary Russell
- * @since 1.0.2
+ * @author Artem Bilan
+ * @since 1.1.0
  *
  */
-public class WireTapSpec extends IntegrationComponentSpec<WireTapSpec, ChannelInterceptor> implements ComponentsRegistration {
+public class WireTapSpec extends IntegrationComponentSpec<WireTapSpec, WireTap> implements ComponentsRegistration {
+
+	private final MessageChannel channel;
 
 	private MessageSelector selector;
 
-	private MessageChannel tapChannel;
-
 	private Long timeout;
 
-	WireTapSpec selector(String selectorExpression) {
+	WireTapSpec(MessageChannel channel) {
+		Assert.notNull(channel);
+		this.channel = channel;
+	}
+
+	public WireTapSpec selector(String selectorExpression) {
 		this.selector = new ExpressionEvaluatingSelector(PARSER.parseExpression(selectorExpression));
 		return this;
 	}
 
-	WireTapSpec selector(MessageSelector selector) {
+	public WireTapSpec selector(MessageSelector selector) {
 		this.selector = selector;
-		return this;
-	}
-
-	public WireTapSpec channel(MessageChannel tapChannel) {
-		this.tapChannel = tapChannel;
-		return this;
-	}
-
-	public WireTapSpec channel(String tapChannelName) {
-		this.tapChannel = new MessageChannelReference(tapChannelName);
 		return this;
 	}
 
@@ -67,13 +62,11 @@ public class WireTapSpec extends IntegrationComponentSpec<WireTapSpec, ChannelIn
 	}
 
 	@Override
-	protected ChannelInterceptor doGet() {
-		Assert.state(this.tapChannel != null, "tapChannel is required");
-		DslWireTap wireTap = new DslWireTap(this.tapChannel, this.selector);
+	protected WireTap doGet() {
+		WireTap wireTap = new WireTap(this.channel, this.selector);
 		if (this.timeout != null) {
 			wireTap.setTimeout(this.timeout);
 		}
-		this.target = wireTap;
 		return wireTap;
 	}
 
@@ -83,7 +76,7 @@ public class WireTapSpec extends IntegrationComponentSpec<WireTapSpec, ChannelIn
 			return Arrays.asList(this.selector, this.target);
 		}
 		else {
-			return Collections.singletonList(this.target);
+			return Arrays.<Object>asList(this.target);
 		}
 	}
 

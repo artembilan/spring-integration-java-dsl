@@ -69,9 +69,9 @@ import org.springframework.integration.channel.QueueChannel;
 import org.springframework.integration.config.EnableIntegration;
 import org.springframework.integration.config.EnableMessageHistory;
 import org.springframework.integration.context.IntegrationContextUtils;
+import org.springframework.integration.dsl.Channels;
 import org.springframework.integration.dsl.IntegrationFlow;
 import org.springframework.integration.dsl.IntegrationFlows;
-import org.springframework.integration.dsl.Taps;
 import org.springframework.integration.dsl.channel.DirectChannelSpec;
 import org.springframework.integration.dsl.channel.MessageChannels;
 import org.springframework.integration.dsl.core.Pollers;
@@ -264,24 +264,6 @@ public class IntegrationFlowTests {
 	@Autowired
 	@Qualifier("gatewayError")
 	private PollableChannel gatewayError;
-
-	@Autowired
-	private SubscribableChannel tappedChannel1;
-
-//	@Autowired
-//	@Qualifier("wireTapFlow2.input")
-//	private SubscribableChannel tappedChannel2;
-
-	@Autowired
-	@Qualifier("wireTapFlow3.input")
-	private SubscribableChannel tappedChannel3;
-
-	@Autowired
-	private SubscribableChannel tappedChannel4;
-
-	@Autowired
-	@Qualifier("tapChannel")
-	private QueueChannel tapChannel;
 
 	@Test
 	public void testDirectFlow() {
@@ -848,50 +830,68 @@ public class IntegrationFlowTests {
 		assertThat(((Exception) receive.getPayload()).getMessage(), containsString("' rejected Message"));
 	}
 
+	@Autowired
+	private SubscribableChannel tappedChannel1;
+
+	@Autowired
+	@Qualifier("wireTapFlow2.input")
+	private SubscribableChannel tappedChannel2;
+
+	@Autowired
+	@Qualifier("wireTapFlow3.input")
+	private SubscribableChannel tappedChannel3;
+
+	@Autowired
+	private SubscribableChannel tappedChannel4;
+
+	@Autowired
+	@Qualifier("tapChannel")
+	private QueueChannel tapChannel;
+
+	@Autowired
+	@Qualifier("wireTapFlow5.input")
+	private SubscribableChannel tappedChannel5;
+
+	@Autowired
+	private PollableChannel wireTapSubflowResult;
+
 	@Test
-	public void testWireTap1() {
+	public void testWireTap() {
 		this.tappedChannel1.send(new GenericMessage<>("foo"));
 		this.tappedChannel1.send(new GenericMessage<>("bar"));
-		Message<?> out = this.tapChannel.receive(0);
+		Message<?> out = this.tapChannel.receive(10000);
 		assertNotNull(out);
 		assertEquals("foo", out.getPayload());
 		assertNull(this.tapChannel.receive(0));
-	}
 
-//	@Test
-//	/*
-//	 *  This doesn't work because wireTapFlow2.input is a MessageChannelReference so we don't intercept it.
-//	 *  We either need to detect it and document the limitation, or find some way to delay the interception.
-//	 */
-//	public void testWireTap2() {
-//		this.tappedChannel2.send(new GenericMessage<>("foo"));
-//		this.tappedChannel2.send(new GenericMessage<>("bar"));
-//		Message<?> out = this.tapChannel.receive(0);
-//		assertNotNull(out);
-//		assertEquals("foo", out.getPayload());
-//		assertNull(this.tapChannel.receive(0));
-//	}
+		this.tappedChannel2.send(new GenericMessage<>("foo"));
+		this.tappedChannel2.send(new GenericMessage<>("bar"));
+		out = this.tapChannel.receive(10000);
+		assertNotNull(out);
+		assertEquals("foo", out.getPayload());
+		assertNull(this.tapChannel.receive(0));
 
-	@Test
-	public void testWireTap3() {
 		this.tappedChannel3.send(new GenericMessage<>("foo"));
 		this.tappedChannel3.send(new GenericMessage<>("bar"));
-		Message<?> out = this.tapChannel.receive(0);
+		out = this.tapChannel.receive(10000);
 		assertNotNull(out);
 		assertEquals("foo", out.getPayload());
 		assertNull(this.tapChannel.receive(0));
-	}
 
-	@Test
-	public void testWireTap4() {
 		this.tappedChannel4.send(new GenericMessage<>("foo"));
 		this.tappedChannel4.send(new GenericMessage<>("bar"));
-		Message<?> out = this.tapChannel.receive(0);
+		out = this.tapChannel.receive(10000);
 		assertNotNull(out);
 		assertEquals("foo", out.getPayload());
-		out = this.tapChannel.receive(0);
+		out = this.tapChannel.receive(10000);
 		assertNotNull(out);
-		assertEquals("bar", out.getPayload());	}
+		assertEquals("bar", out.getPayload());
+
+		this.tappedChannel5.send(new GenericMessage<>("foo"));
+		out = this.wireTapSubflowResult.receive(10000);
+		assertNotNull(out);
+		assertEquals("FOO", out.getPayload());
+	}
 
 	@Autowired
 	@Qualifier("subscribersFlow.input")
@@ -1034,33 +1034,42 @@ public class IntegrationFlowTests {
 
 		@Bean
 		public IntegrationFlow wireTapFlow1() {
-			return IntegrationFlows.from(MessageChannels.direct("tappedChannel1"))
-					.wireTap(Taps.tap("tapChannel").selector(m -> m.getPayload().equals("foo")))
+			return IntegrationFlows.from("tappedChannel1")
+					.wireTap("tapChannel", wt -> wt.selector(m -> m.getPayload().equals("foo")))
 					.channel("nullChannel")
 					.get();
 		}
 
-//		@Bean // Doesn't work - see comment on test
-//		public IntegrationFlow wireTapFlow2() {
-//			return f -> f
-//					.tap(Taps.tap().channel("tapChannel").selector(m -> m.getPayload().equals("foo")))
-//					.channel("nullChannel");
-//		}
+		@Bean
+		public IntegrationFlow wireTapFlow2() {
+			return f -> f
+					.wireTap("tapChannel", wt -> wt.selector(m -> m.getPayload().equals("foo")))
+					.channel("nullChannel");
+		}
 
 		@Bean
 		public IntegrationFlow wireTapFlow3() {
 			return f -> f
 					.transform("payload")
-					.wireTap(Taps.tap("tapChannel").selector(m -> m.getPayload().equals("foo")))
+					.wireTap("tapChannel", wt -> wt.selector("payload == 'foo'"))
 					.channel("nullChannel");
 		}
 
 		@Bean
 		public IntegrationFlow wireTapFlow4() {
-			return IntegrationFlows.from(MessageChannels.direct("tappedChannel4"))
-					.wireTap("tapChannel")
+			return IntegrationFlows.from("tappedChannel4")
+					.wireTap(tapChannel())
 					.channel("nullChannel")
 					.get();
+		}
+
+		@Bean
+		public IntegrationFlow wireTapFlow5() {
+			return f -> f
+					.wireTap(sf -> sf
+							.<String, String>transform(String::toUpperCase)
+							.channel(c -> c.queue("wireTapSubflowResult")))
+					.channel("nullChannel");
 		}
 
 		@Bean
