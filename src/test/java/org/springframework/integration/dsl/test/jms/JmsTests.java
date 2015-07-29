@@ -182,7 +182,7 @@ public class JmsTests {
 	}
 
 	@MessagingGateway(defaultRequestChannel = "controlBus.input")
-	private static interface ControlBusGateway {
+	private interface ControlBusGateway {
 
 		void send(String command);
 
@@ -250,16 +250,11 @@ public class JmsTests {
 
 		@Bean
 		public IntegrationFlow pubSubFlow() {
-			return IntegrationFlows.from(Jms.publishSubscribeChannel(this.jmsConnectionFactory)
-											.destination("pubsub"))
-									.bridge(e -> e.id("bridgePubSub"))
-									.channel(jmsPubSubBridgeChannel())
-									.get();
-		}
-
-		@Bean
-		public PollableChannel jmsPubSubBridgeChannel() {
-			return new QueueChannel();
+			return IntegrationFlows
+					.from(Jms.publishSubscribeChannel(this.jmsConnectionFactory)
+							.destination("pubsub"))
+					.channel(c -> c.queue("jmsPubSubBridgeChannel"))
+					.get();
 		}
 
 		@Bean
@@ -276,12 +271,11 @@ public class JmsTests {
 		public IntegrationFlow jmsMessageDrivenFlowWithContainer() {
 			return IntegrationFlows
 					.from(Jms.messageDriverChannelAdapter(
-								Jms.container(this.jmsConnectionFactory, "containerSpecDestination")
+							Jms.container(this.jmsConnectionFactory, "containerSpecDestination")
 									.pubSubDomain(false)
-									.get())
-							.id("fromContainerSpec"))
-					.<String, String>transform(String::trim)
-					.channel(this.jmsOutboundInboundReplyChannel())
+									.get()))
+					.transform(String::trim)
+					.channel(jmsOutboundInboundReplyChannel())
 					.get();
 		}
 
